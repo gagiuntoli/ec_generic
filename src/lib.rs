@@ -1,15 +1,13 @@
-use std::iter::Product;
-
 use num_bigint::BigUint;
 
 #[derive(PartialEq, Clone, Debug)]
-enum Point {
+pub enum Point {
     Coor(BigUint, BigUint),
     Identity,
 }
 
 #[derive(PartialEq, Clone, Debug)]
-struct EllipticCurve {
+pub struct EllipticCurve {
     // y^2 = x^2 + a * x + b
     a: BigUint,
     b: BigUint,
@@ -17,7 +15,7 @@ struct EllipticCurve {
 }
 
 impl EllipticCurve {
-    fn add(&self, c: &Point, d: &Point) -> Point {
+    pub fn add(&self, c: &Point, d: &Point) -> Point {
         assert!(self.is_on_curve(c), "Point is not in curve");
         assert!(self.is_on_curve(d), "Point is not in curve");
         assert!(*c != *d, "Points should not be the same");
@@ -43,7 +41,7 @@ impl EllipticCurve {
         }
     }
 
-    fn double(&self, c: &Point) -> Point {
+    pub fn double(&self, c: &Point) -> Point {
         assert!(self.is_on_curve(c), "Point is not in curve");
 
         match c {
@@ -80,7 +78,7 @@ impl EllipticCurve {
         (x3, y3)
     }
 
-    fn scalar_mul(c: &Point, d: &BigUint) -> Point {
+    pub fn scalar_mul(_c: &Point, _d: &BigUint) -> Point {
         // addition/doubling algorithm
         // B = d * A
         todo!()
@@ -101,41 +99,41 @@ impl EllipticCurve {
     }
 }
 
-struct FiniteField {}
+pub struct FiniteField {}
 
 impl FiniteField {
-    fn add(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
+    pub fn add(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
         // c + d = r mod p
         let r = c + d;
         r.modpow(&BigUint::from(1u32), p)
     }
 
-    fn mult(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
+    pub fn mult(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
         // c * d = r mod p
         let r = c * d;
         r.modpow(&BigUint::from(1u32), p)
     }
 
-    fn inv_addition(c: &BigUint, p: &BigUint) -> BigUint {
+    pub fn inv_addition(c: &BigUint, p: &BigUint) -> BigUint {
         // -c mod p
         assert!(c < p, "c >= p");
         //format!("number: {} is bigger or equal than p: {}", c, p)
         p - c
     }
 
-    fn subtract(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
+    pub fn subtract(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
         let d_inv = FiniteField::inv_addition(d, p);
         FiniteField::add(c, &d_inv, p)
     }
 
-    fn inv_multiplication(c: &BigUint, p: &BigUint) -> BigUint {
+    pub fn inv_multiplication(c: &BigUint, p: &BigUint) -> BigUint {
         // TODO: this function uses Fermat's Little Theorem and thus it is only valid for a p prime
         // only for p prime
         // c^(-1) mod p = c^(p-2) mod p
         c.modpow(&(p - BigUint::from(2u32)), p)
     }
 
-    fn divide(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
+    pub fn divide(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
         let d_inv = FiniteField::inv_multiplication(d, p);
         FiniteField::mult(c, &d_inv, p)
     }
