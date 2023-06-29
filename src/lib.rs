@@ -9,9 +9,9 @@ pub enum Point {
 #[derive(PartialEq, Clone, Debug)]
 pub struct EllipticCurve {
     // y^2 = x^2 + a * x + b
-    a: BigUint,
-    b: BigUint,
-    p: BigUint,
+    pub a: BigUint,
+    pub b: BigUint,
+    pub p: BigUint,
 }
 
 impl EllipticCurve {
