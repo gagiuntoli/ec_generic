@@ -20,7 +20,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-ec_generic = "0.1.2"
+ec_generic = "0.1.6"
 ```
 
 # Example: `y^2 = x^3 + 2x + 2`
@@ -99,12 +99,24 @@ fn main() {
 
 use num_bigint::BigUint;
 
+///
+/// This represents a point in the elliptic curve. The identity element is such
+/// that:
+///
+///  - `A - A = I`
+///  - `A + I = A`
+///  - `I + I = 2 * I = I`
+///
 #[derive(PartialEq, Clone, Debug)]
 pub enum Point {
     Coor(BigUint, BigUint),
     Identity,
 }
 
+///
+/// This represents an elliptic curve of the form
+/// y^2 = x^3 + ax + b
+///
 #[derive(PartialEq, Clone, Debug)]
 pub struct EllipticCurve {
     // y^2 = x^2 + a * x + b
@@ -136,10 +148,9 @@ impl EllipticCurve {
                 }
 
                 // s = (y2 - y1) / (x2 - x1) mod p
-                // x3 = s^2 - x1 - x2  mod p
-                // y3 = s(x1 - x3) - y1 mod p
                 let numerator = FiniteField::subtract(y2, y1, &self.p);
                 let denominator = FiniteField::subtract(x2, x1, &self.p);
+
                 let s = FiniteField::divide(&numerator, &denominator, &self.p);
 
                 let (x3, y3) = self.compute_x3_y3(&x1, &y1, &x2, &s);
@@ -160,8 +171,6 @@ impl EllipticCurve {
             Point::Identity => Point::Identity,
             Point::Coor(x1, y1) => {
                 // s = (3 * x1^2 + a) / (2 * y1) mod p
-                // x3 = s^2 - 2 * x1 mod p
-                // y3 = s(x1 - x3) - y1 mod p
                 let numerator = x1.modpow(&BigUint::from(2u32), &self.p);
                 let numerator = FiniteField::mult(&BigUint::from(3u32), &numerator, &self.p);
                 let numerator = FiniteField::add(&self.a, &numerator, &self.p);
@@ -175,6 +184,21 @@ impl EllipticCurve {
         }
     }
 
+    ///
+    /// computes the resulting point of the addition:
+    ///  `C(x3,y3) = A(x1,y1) + B(x2,y2)`:
+    ///
+    /// `s` is given as input and should be computed differently depending on it
+    /// is point doubling or point addition:
+    ///
+    /// - B != A => s = (y2 - y1) / (x2 - x1) mod p
+    /// - B == A => s = (3 * x1^2 + a) / (2 * y1) mod p
+    ///
+    /// Result:
+    ///
+    /// - x3 = s^2 - x1 - x2 mod p
+    /// - y3 = s(x1 - x3) - y1 mod p
+    ///
     fn compute_x3_y3(
         &self,
         x1: &BigUint,
@@ -182,8 +206,6 @@ impl EllipticCurve {
         x2: &BigUint,
         s: &BigUint,
     ) -> (BigUint, BigUint) {
-        // x3 = s^2 - x1 - x2 mod p
-        // y3 = s(x1 - x3) - y1 mod p
         let s2 = s.modpow(&BigUint::from(2u32), &self.p);
         let x3 = FiniteField::subtract(&s2, x1, &self.p);
         let x3 = FiniteField::subtract(&x3, x2, &self.p);
@@ -202,10 +224,10 @@ impl EllipticCurve {
     /// Perform a scalar multiplication of a point: B = d * A where A is a point
     /// in the curve and d is a positive scalar of any value.
     ///
-    /// It uses the addition/doubling algorithm - B = d * A:
+    /// It uses the addition/doubling algorithm
     ///
     /// T = A
-    /// for i in range(bits of d - 1, 0)
+    /// for i in [(bits of d)-1), 0]
     ///      T = 2 * T
     ///      if bit i of d == 1
     ///          T = T + A
@@ -221,10 +243,14 @@ impl EllipticCurve {
         t
     }
 
+    ///
+    /// Checks if a point A = (x,y) belongs to the elliptic curve:
+    ///
+    /// if `y^2 = x^3 + a * x + b` then returns `true`, if not, `returns false`.
+    ///
     pub fn is_on_curve(&self, c: &Point) -> bool {
         match c {
             Point::Coor(x, y) => {
-                // y^2 = x^3 + a * x + b
                 let y2 = y.modpow(&BigUint::from(2u32), &self.p);
                 let x3 = x.modpow(&BigUint::from(3u32), &self.p);
                 let ax = FiniteField::mult(&self.a, x, &self.p);
@@ -236,66 +262,93 @@ impl EllipticCurve {
     }
 }
 
+///
+/// A struct which implements the bottom layer finite field group needed to
+/// operate with the coordinates of the elliptic curve group.
+///
 struct FiniteField {}
 
 impl FiniteField {
-    fn add(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
-        // c + d = r mod p
+    ///
+    /// Adds to elements in the set
+    ///
+    /// `a + b = a mod p`
+    ///
+    fn add(a: &BigUint, b: &BigUint, p: &BigUint) -> BigUint {
+        assert!(a < p, "{a} >= {p}");
+        assert!(b < p, "{b} >= {p}");
 
-        assert!(c < p, "{c} >= {p}");
-        assert!(d < p, "{d} >= {p}");
-
-        let r = c + d;
+        let r = a + b;
         r.modpow(&BigUint::from(1u32), p)
     }
 
-    fn mult(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
-        // c * d = r mod p
+    ///
+    /// Multiplies to elements in the set
+    ///
+    /// `a * b = a mod p`
+    ///
+    fn mult(a: &BigUint, b: &BigUint, p: &BigUint) -> BigUint {
+        assert!(a < p, "{a} >= {p}");
+        assert!(b < p, "{b} >= {p}");
 
-        assert!(c < p, "{c} >= {p}");
-        assert!(d < p, "{d} >= {p}");
-
-        let r = c * d;
+        let r = a * b;
         r.modpow(&BigUint::from(1u32), p)
     }
 
-    fn inv_addition(c: &BigUint, p: &BigUint) -> BigUint {
-        // -c mod p
+    ///
+    /// Finds the additive inverse of an element in the set:
+    ///
+    /// `a + (-a) = 0 mod p`
+    ///
+    fn inv_add(a: &BigUint, p: &BigUint) -> BigUint {
+        assert!(a < p, "{a} >= {p}");
 
-        assert!(c < p, "{c} >= {p}");
-
-        p - c
+        p - a
     }
 
-    fn subtract(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
-        // c - d mod p
-        assert!(c < p, "{c} >= {p}");
-        assert!(d < p, "{d} >= {p}");
+    ///
+    /// Subtract two elements in the set:
+    ///
+    /// `a - b = a + (-b) = a mod p`
+    ///
+    fn subtract(a: &BigUint, b: &BigUint, p: &BigUint) -> BigUint {
+        assert!(a < p, "{a} >= {p}");
+        assert!(b < p, "{b} >= {p}");
 
-        let d_inv = FiniteField::inv_addition(d, p);
+        let d_inv = FiniteField::inv_add(b, p);
         assert!(d_inv < p.clone(), "{d_inv} >= {p}");
 
-        FiniteField::add(c, &d_inv, p)
+        FiniteField::add(a, &d_inv, p)
     }
 
-    // TODO: this function uses Fermat's Little Theorem and thus it is only
-    // valid for a p prime only for p prime
-    fn inv_multiplication(c: &BigUint, p: &BigUint) -> BigUint {
-        // c^(-1) mod p = c^(p-2) mod p
+    ///
+    /// Finds the multiplicative inverse of an element in the set if p is a
+    /// prime number using Fermat's Little Theorem:
+    ///
+    /// `a^(-1) mod p = a^(p-2) mod p`
+    ///
+    /// Such that:
+    /// `a * a^(-1) = 1 mod p`
+    ///
+    fn inv_mult_prime(a: &BigUint, p: &BigUint) -> BigUint {
+        assert!(a < p, "{a} >= {p}");
 
-        assert!(c < p, "{c} >= {p}");
-
-        c.modpow(&(p - BigUint::from(2u32)), p)
+        a.modpow(&(p - BigUint::from(2u32)), p)
     }
 
-    fn divide(c: &BigUint, d: &BigUint, p: &BigUint) -> BigUint {
-        assert!(c < p, "{c} >= {p}");
-        assert!(d < p, "{d} >= {p}");
+    ///
+    /// Divides two elements in the set:
+    ///
+    /// `a / b = a * b^(-1) = c mod p`
+    ///
+    fn divide(a: &BigUint, b: &BigUint, p: &BigUint) -> BigUint {
+        assert!(a < p, "{a} >= {p}");
+        assert!(b < p, "{b} >= {p}");
 
-        let d_inv = FiniteField::inv_multiplication(d, p);
-        assert!(d_inv < p.clone(), "{c} >= {p}");
+        let d_inv = FiniteField::inv_mult_prime(b, p);
+        assert!(d_inv < p.clone(), "{a} >= {p}");
 
-        FiniteField::mult(c, &d_inv, p)
+        FiniteField::mult(a, &d_inv, p)
     }
 }
 
@@ -359,37 +412,37 @@ mod test {
     }
 
     #[test]
-    fn test_inv_addition_1() {
+    fn test_inv_add_1() {
         let c = BigUint::from(4u32);
         let p = BigUint::from(51u32);
 
-        let r = FiniteField::inv_addition(&c, &p);
+        let r = FiniteField::inv_add(&c, &p);
 
         assert_eq!(r, BigUint::from(47u32));
     }
 
     #[test]
     #[should_panic]
-    fn test_inv_addition_2() {
+    fn test_inv_add_2() {
         let c = BigUint::from(52u32);
         let p = BigUint::from(51u32);
 
-        FiniteField::inv_addition(&c, &p);
+        FiniteField::inv_add(&c, &p);
     }
 
     #[test]
-    fn test_inv_addition_identity() {
+    fn test_inv_add_identity() {
         let c = BigUint::from(4u32);
         let p = BigUint::from(51u32);
 
-        let c_inv = FiniteField::inv_addition(&c, &p);
+        let c_inv = FiniteField::inv_add(&c, &p);
 
         assert_eq!(c_inv, BigUint::from(47u32));
         assert_eq!(FiniteField::add(&c, &c_inv, &p), BigUint::from(0u32));
     }
 
     #[test]
-    fn test_substract() {
+    fn test_subtract() {
         let c = BigUint::from(4u32);
         let p = BigUint::from(51u32);
 
@@ -397,11 +450,11 @@ mod test {
     }
 
     #[test]
-    fn test_inv_multiplication_identity() {
+    fn test_inv_mult_prime_identity() {
         let c = BigUint::from(4u32);
         let p = BigUint::from(11u32);
 
-        let c_inv = FiniteField::inv_multiplication(&c, &p);
+        let c_inv = FiniteField::inv_mult_prime(&c, &p);
 
         // 4 * 3 mod 11 = 12 mod 11 = 1
         assert_eq!(c_inv, BigUint::from(3u32));
