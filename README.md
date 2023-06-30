@@ -27,13 +27,13 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-ec_generic = "0.1.7"
+ec_generic = "0.1.8"
 ```
 
 ## Example: `y^2 = x^3 + 2x + 2 mod 17`
 
 ```rust
-use ec_generic::elliptic_curve::{EllipticCurve, Point};
+use ec_generic::{EllipticCurve, Point};
 use num_bigint::BigUint;
 
 fn main() {
@@ -59,7 +59,7 @@ fn main() {
 ## Example: `secp256k1`: `y^2 = x^3 + 7 mod p (large)`
 
 ```rust
-use ec_generic::elliptic_curve::{EllipticCurve, Point};
+use ec_generic::{EllipticCurve, Point};
 use num_bigint::BigUint;
 
 fn main() {
