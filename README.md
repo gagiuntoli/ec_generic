@@ -8,16 +8,17 @@ group:
 - Point Doubling: `R = P + P = 2 * P`
 - Scalar Multiplication: `R = d * P`
 
+A generic elliptic curve is defined as `y^2 = x^3 + ax + b mod p`, and in this
+particular library the constrains are:
+
+ - `p` should be **a prime number** bigger than 3
+ - `4 a^3 + 27 b^2 != 0`
+
 The library could be use in any cryptographic algorithm that requires elliptic
 curve groups, for example:
 
 - Digital Signature Algorithm (DSA)
 - Zero-Knowledge Proofs (ZKP)
-
-The requirements to define the curve `y^2 = x^3 + ax + b` are:
-
- - `p` should be **a prime number** bigger than 3
- - `4 a^3 + 27 b^2 != 0`
 
 # Usage
 
@@ -26,13 +27,13 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-ec_generic = "0.1.6"
+ec_generic = "0.1.7"
 ```
 
-# Example: `y^2 = x^3 + 2x + 2`
+## Example: `y^2 = x^3 + 2x + 2`
 
 ```rust
-use ec_generic::{EllipticCurve, Point};
+use ec_generic::elliptic_curve::{EllipticCurve, Point};
 use num_bigint::BigUint;
 
 fn main() {
@@ -55,10 +56,10 @@ fn main() {
 }
 ```
 
-# Example: `secp256k1`: `y^2 = x^3 + 7`
+## Example: `secp256k1`: `y^2 = x^3 + 7`
 
 ```rust
-use ec_generic::{EllipticCurve, Point};
+use ec_generic::elliptic_curve::{EllipticCurve, Point};
 use num_bigint::BigUint;
 
 fn main() {
