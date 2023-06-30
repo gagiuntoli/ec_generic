@@ -30,7 +30,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 ec_generic = "0.1.7"
 ```
 
-## Example: `y^2 = x^3 + 2x + 2`
+## Example: `y^2 = x^3 + 2x + 2 mod 17`
 
 ```rust
 use ec_generic::elliptic_curve::{EllipticCurve, Point};
@@ -56,7 +56,7 @@ fn main() {
 }
 ```
 
-## Example: `secp256k1`: `y^2 = x^3 + 7`
+## Example: `secp256k1`: `y^2 = x^3 + 7 mod p (large)`
 
 ```rust
 use ec_generic::elliptic_curve::{EllipticCurve, Point};
