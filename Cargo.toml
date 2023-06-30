@@ -1,12 +1,11 @@
 [package]
 name = "ec-generic"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["Guido Giuntoli <gagiuntoli@gmail.com>"]
 description = "A generic use elliptic curve library"
 homepage = "https://gagiuntoli.com/"
-documentation = "https://docs.rs/ec-generic/0.1.1/ec_generic/"
 repository = "https://github.com/gagiuntoli/ec_generic"
 readme = "README.md"
 keywords = ["elliptic-curve", "cryptography"]

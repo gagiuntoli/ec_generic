@@ -3,11 +3,9 @@ This crate is a minimal and simple-to-use elliptic curve library. This
 library allows to perform the following operations over an elliptic curve
 finite cyclic group:
 
-- Point Addition: R = P + Q. P and Q are both points belonging to the group,
-and the result R does it too.
-- Point Doubling: R = P + P = 2 * P.
-- Scalar Multiplication: R = d * P, we use the double-and-add algorithms
-which combines point addition and doubling together. `d` can be any number.
+- Point Addition: `R = P + Q`
+- Point Doubling: `R = P + P = 2 * P`
+- Scalar Multiplication: `R = d * P`
 
 The library could be use in any cryptographic algorithm that requires elliptic
 curve groups, for example:
@@ -25,7 +23,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 ec_generic = "0.1.2"
 ```
 
-# Example: Define a elliptic curve `y^2 = x^3 + 2x + 2` and operate with it
+# Example: `y^2 = x^3 + 2x + 2`
 
 ```rust
 use ec_generic::{EllipticCurve, Point};
@@ -51,7 +49,7 @@ fn main() {
 }
 ```
 
-# Example: Define a `secp256k1` elliptic curve `y^2 = x^3 + 7` and operate with it
+# Example: `secp256k1`: `y^2 = x^3 + 7`
 
 ```rust
 use ec_generic::{EllipticCurve, Point};
