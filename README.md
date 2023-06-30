@@ -1,8 +1,8 @@
 # ec_generic
 
-This crate is a minimal and simple-to-use elliptic curve library. This
-library allows to perform the following operations over an elliptic curve
-finite cyclic group:
+This crate is a minimal and easy-to-use elliptic curve library. This library
+allows to perform the following operations over an elliptic curve finite cyclic
+group:
 
 - Point Addition: `R = P + Q`
 - Point Doubling: `R = P + P = 2 * P`
@@ -13,6 +13,11 @@ curve groups, for example:
 
 - Digital Signature Algorithm (DSA)
 - Zero-Knowledge Proofs (ZKP)
+
+The requirements to define the curve `y^2 = x^3 + ax + b` are:
+
+ - `p` should be **a prime number** bigger than 3
+ - `4 a^3 + 27 b^2 != 0`
 
 # Usage
 

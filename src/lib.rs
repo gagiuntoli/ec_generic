@@ -1,7 +1,7 @@
 /*!
-This crate is a minimal and simple-to-use elliptic curve library. This
-library allows to perform the following operations over an elliptic curve
-finite cyclic group:
+This crate is a minimal and easy-to-use elliptic curve library. This library
+allows to perform the following operations over an elliptic curve finite cyclic
+group:
 
 - Point Addition: `R = P + Q`
 - Point Doubling: `R = P + P = 2 * P`
@@ -23,7 +23,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 ec_generic = "0.1.6"
 ```
 
-# Example: `y^2 = x^3 + 2x + 2`
+## Example: `y^2 = x^3 + 2x + 2`
 
 ```rust
 use ec_generic::{EllipticCurve, Point};
@@ -49,7 +49,7 @@ fn main() {
 }
 ```
 
-# Example: `secp256k1`: `y^2 = x^3 + 7`
+## Example: `secp256k1`: `y^2 = x^3 + 7`
 
 ```rust
 use ec_generic::{EllipticCurve, Point};
