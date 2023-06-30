@@ -133,10 +133,10 @@ pub struct EllipticCurve {
 
 impl EllipticCurve {
     ///
-    /// Perform a point addition: C = A + B where A and B are points which
-    /// belong to the curve. Geometrically speaking, the point C is the
-    /// x-reflection of the intersection of the lines that passes through A and
-    /// B and intersects the curve.
+    /// Perform a point addition: `C = A + B` where `A` and `B` are points which
+    /// belong to the curve. Geometrically speaking, the point `C` is the
+    /// x-reflection of the intersection of the lines that passes through `A`
+    /// and `B` and intersects the curve.
     ///
     pub fn add(&self, c: &Point, d: &Point) -> Point {
         assert!(self.is_on_curve(c), "Point is not in curve");
@@ -166,9 +166,9 @@ impl EllipticCurve {
     }
 
     ///
-    /// Perform a point doubling: B = A + A = 2 * A where A is a point in the
-    /// curve. Geometrically speaking, the point B is the intersection of the
-    /// tangent line over A that intersects the curve.
+    /// Perform a point doubling: `B = A + A = 2 * A` where `A` is a point in
+    /// the curve. Geometrically speaking, the point `B` is the intersection of
+    /// the tangent line over A that intersects the curve.
     ///
     pub fn double(&self, c: &Point) -> Point {
         assert!(self.is_on_curve(c), "Point is not in curve");
@@ -197,13 +197,13 @@ impl EllipticCurve {
     /// `s` is given as input and should be computed differently depending on it
     /// is point doubling or point addition:
     ///
-    /// - B != A => s = (y2 - y1) / (x2 - x1) mod p
-    /// - B == A => s = (3 * x1^2 + a) / (2 * y1) mod p
+    /// - `B != A => s = (y2 - y1) / (x2 - x1) mod p`
+    /// - `B == A => s = (3 * x1^2 + a) / (2 * y1) mod p`
     ///
     /// Result:
     ///
-    /// - x3 = s^2 - x1 - x2 mod p
-    /// - y3 = s(x1 - x3) - y1 mod p
+    /// - `x3 = s^2 - x1 - x2 mod p`
+    /// - `y3 = s(x1 - x3) - y1 mod p`
     ///
     fn compute_x3_y3(
         &self,
@@ -227,16 +227,18 @@ impl EllipticCurve {
     }
 
     ///
-    /// Perform a scalar multiplication of a point: B = d * A where A is a point
-    /// in the curve and d is a positive scalar of any value.
+    /// Perform a scalar multiplication of a point: `B = d * A` where `A` is a
+    /// point in the curve and `d` is a positive scalar of any value.
     ///
     /// It uses the addition/doubling algorithm
     ///
-    /// T = A
-    /// for i in [(bits of d)-1), 0]
-    ///      T = 2 * T
-    ///      if bit i of d == 1
-    ///          T = T + A
+    /// ```text
+    ///  T = A
+    ///  for i in [(bits of d)-1), 0]
+    ///       T = 2 * T
+    ///       if bit i of d == 1
+    ///           T = T + A
+    /// ```
     ///
     pub fn scalar_mul(&self, c: &Point, d: &BigUint) -> Point {
         let mut t = c.clone();
