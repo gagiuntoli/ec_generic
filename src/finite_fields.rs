@@ -39,9 +39,17 @@ impl FiniteField {
     /// `a + (-a) = 0 mod p`
     ///
     pub fn inv_add(a: &BigUint, p: &BigUint) -> BigUint {
-        assert!(a < p, "{a} >= {p}");
+        assert!(a < p, "a: {a} >= p: {p}");
 
-        p - a
+        if *a == BigUint::from(0u32) {
+            return a.clone();
+        }
+
+        let res = p - a;
+
+        assert!(res < *p, "res: {res} >= p: {p}");
+
+        res
     }
 
     ///
@@ -50,13 +58,18 @@ impl FiniteField {
     /// `a - b = a + (-b) = a mod p`
     ///
     pub fn subtract(a: &BigUint, b: &BigUint, p: &BigUint) -> BigUint {
-        assert!(a < p, "{a} >= {p}");
-        assert!(b < p, "{b} >= {p}");
+        assert!(a < p, "a: {a} >= {p}");
+        assert!(b < p, "b: {b} >= {p}");
 
-        let d_inv = FiniteField::inv_add(b, p);
-        assert!(d_inv < p.clone(), "{d_inv} >= {p}");
+        let b_inv = FiniteField::inv_add(b, p);
 
-        FiniteField::add(a, &d_inv, p)
+        assert!(b_inv < p.clone(), "b_inv: {b_inv} >= p: {p}");
+
+        let res = FiniteField::add(a, &b_inv, p);
+
+        assert!(b_inv < p.clone(), "res: {res} >= p: {p}");
+
+        res
     }
 
     ///
@@ -157,6 +170,16 @@ mod test {
         let r = FiniteField::inv_add(&c, &p);
 
         assert_eq!(r, BigUint::from(47u32));
+    }
+
+    #[test]
+    fn test_inv_add_zero() {
+        let c = BigUint::from(0u32);
+        let p = BigUint::from(51u32);
+
+        let r = FiniteField::inv_add(&c, &p);
+
+        assert_eq!(r, BigUint::from(0u32));
     }
 
     #[test]

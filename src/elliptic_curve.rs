@@ -26,7 +26,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-ec_generic = "0.1.9"
+ec_generic = "0.1.10"
 ```
 
 ## Example: `y^2 = x^3 + 2x + 2 mod 17`
@@ -141,7 +141,10 @@ impl EllipticCurve {
     pub fn add(&self, c: &Point, d: &Point) -> Point {
         assert!(self.is_on_curve(c), "Point is not in curve");
         assert!(self.is_on_curve(d), "Point is not in curve");
-        assert!(*c != *d, "Points should not be the same");
+
+        if *c == *d {
+            return self.double(c);
+        }
 
         match (c, d) {
             (Point::Identity, _) => d.clone(),
@@ -176,6 +179,10 @@ impl EllipticCurve {
         match c {
             Point::Identity => Point::Identity,
             Point::Coor(x1, y1) => {
+                if *y1 == BigUint::from(0u32) {
+                    return Point::Identity;
+                }
+
                 // s = (3 * x1^2 + a) / (2 * y1) mod p
                 let numerator = x1.modpow(&BigUint::from(2u32), &self.p);
                 let numerator = FiniteField::mult(&BigUint::from(3u32), &numerator, &self.p);
@@ -228,7 +235,7 @@ impl EllipticCurve {
 
     ///
     /// Perform a scalar multiplication of a point: `B = d * A` where `A` is a
-    /// point in the curve and `d` is a positive scalar of any value.
+    /// point in the curve and `d > 0` is a positive scalar of any value.
     ///
     /// It uses the addition/doubling algorithm
     ///
@@ -241,6 +248,8 @@ impl EllipticCurve {
     /// ```
     ///
     pub fn scalar_mul(&self, c: &Point, d: &BigUint) -> Point {
+        assert!(*d > BigUint::from(0u32), "Scalar d should be bigger than 0");
+
         let mut t = c.clone();
         for i in (0..(d.bits() - 1)).rev() {
             t = self.double(&t);
@@ -264,6 +273,7 @@ impl EllipticCurve {
                 let x3 = x.modpow(&BigUint::from(3u32), &self.p);
                 let ax = FiniteField::mult(&self.a, x, &self.p);
                 let x3plusax = FiniteField::add(&x3, &ax, &self.p);
+
                 y2 == FiniteField::add(&x3plusax, &self.b, &self.p)
             }
             Point::Identity => true,
@@ -294,6 +304,24 @@ mod test {
         assert_eq!(res, pr);
 
         let res = ec.add(&p2, &p1);
+        assert_eq!(res, pr);
+    }
+
+    #[test]
+    fn test_ec_add_same_points() {
+        // y^2 = x^3 + 2x + 2 mod 17
+        let ec = EllipticCurve {
+            a: BigUint::from(2u32),
+            b: BigUint::from(2u32),
+            p: BigUint::from(17u32),
+        };
+
+        // (5,1) + (5,1) = (6,3)
+        let p1 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
+        let p2 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
+        let pr = Point::Coor(BigUint::from(6u32), BigUint::from(3u32));
+
+        let res = ec.add(&p1, &p2);
         assert_eq!(res, pr);
     }
 
@@ -394,6 +422,11 @@ mod test {
         let res = ec.scalar_mul(&c, &BigUint::from(10u32));
         assert_eq!(res, pr);
 
+        // 15 (5, 1) = (3,16)
+        let pr = Point::Coor(BigUint::from(3u32), BigUint::from(16u32));
+        let res = ec.scalar_mul(&c, &BigUint::from(15u32));
+        assert_eq!(res, pr);
+
         // 16 (5, 1) = (10,11)
         let pr = Point::Coor(BigUint::from(10u32), BigUint::from(11u32));
         let res = ec.scalar_mul(&c, &BigUint::from(16u32));
@@ -412,6 +445,77 @@ mod test {
         // 19 (5, 1) = I
         let pr = Point::Identity;
         let res = ec.scalar_mul(&c, &BigUint::from(19u32));
+        assert_eq!(res, pr);
+    }
+
+    #[test]
+    fn test_ec_scalar_multiplication_times_15() {
+        // y^2 = x^3 + 2x + 2 mod 17   |G| = 19  19 * A = I
+        let ec = EllipticCurve {
+            a: BigUint::from(2u32),
+            b: BigUint::from(2u32),
+            p: BigUint::from(17u32),
+        };
+
+        let c = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
+
+        // 15 (5, 1) = (3,16)
+        let pr = Point::Coor(BigUint::from(3u32), BigUint::from(16u32));
+        let res = ec.scalar_mul(&c, &BigUint::from(15u32));
+        assert_eq!(res, pr);
+    }
+
+    #[test]
+    fn test_ec_add_special() {
+        // y^2 = x^3 + 2x + 2 mod 17   |G| = 19  19 * A = I
+        let ec = EllipticCurve {
+            a: BigUint::from(2u32),
+            b: BigUint::from(2u32),
+            p: BigUint::from(17u32),
+        };
+
+        // (10, 6) + (5, 1) = (3,1)
+        let p1 = Point::Coor(BigUint::from(10u32), BigUint::from(6u32));
+        let p2 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
+
+        let pr = Point::Coor(BigUint::from(3u32), BigUint::from(1u32));
+        let res = ec.add(&p1, &p2);
+        assert_eq!(res, pr);
+    }
+
+    #[test]
+    fn test_ec_add_special_2() {
+        // y^2 = x^3 + 2x + 2 mod 17   |G| = 19  19 * A = I
+        let ec = EllipticCurve {
+            a: BigUint::from(2u32),
+            b: BigUint::from(2u32),
+            p: BigUint::from(17u32),
+        };
+
+        // (16, 13) + (5, 1) = (0, 6)
+        let p1 = Point::Coor(BigUint::from(16u32), BigUint::from(13u32));
+        let p2 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
+
+        let pr = Point::Coor(BigUint::from(0u32), BigUint::from(6u32));
+        let res = ec.add(&p1, &p2);
+        assert_eq!(res, pr);
+    }
+
+    #[test]
+    fn test_ec_double_special() {
+        // y^2 = x^3 + 2x + 2 mod 17   |G| = 19  19 * A = I
+        let ec = EllipticCurve {
+            a: BigUint::from(2u32),
+            b: BigUint::from(2u32),
+            p: BigUint::from(17u32),
+        };
+
+        // 2 * (10, 6) = (16,13)
+        let p1 = Point::Coor(BigUint::from(10u32), BigUint::from(6u32));
+
+        let pr = Point::Coor(BigUint::from(16u32), BigUint::from(13u32));
+        let res = ec.double(&p1);
+
         assert_eq!(res, pr);
     }
 
