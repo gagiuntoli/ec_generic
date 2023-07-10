@@ -22,9 +22,7 @@ impl FiniteField {
         FiniteField::check_less_than(a, p)?;
         FiniteField::check_less_than(b, p)?;
 
-        let r = a + b;
-
-        Ok(r.modpow(&BigUint::from(1u32), p))
+        Ok((a + b).modpow(&BigUint::from(1u32), p))
     }
 
     ///
@@ -36,8 +34,7 @@ impl FiniteField {
         FiniteField::check_less_than(a, p)?;
         FiniteField::check_less_than(b, p)?;
 
-        let r = a * b;
-        Ok(r.modpow(&BigUint::from(1u32), p))
+        Ok((a * b).modpow(&BigUint::from(1u32), p))
     }
 
     ///
