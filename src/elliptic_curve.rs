@@ -151,16 +151,16 @@ impl EllipticCurve {
             (_, Point::Identity) => c.clone(),
             (Point::Coor(x1, y1), Point::Coor(x2, y2)) => {
                 // Check that they are not additive inverses
-                let y1plusy2 = FiniteField::add(&y1, &y2, &self.p);
+                let y1plusy2 = FiniteField::add(&y1, &y2, &self.p).unwrap();
                 if x1 == x2 && y1plusy2 == BigUint::from(0u32) {
                     return Point::Identity;
                 }
 
                 // s = (y2 - y1) / (x2 - x1) mod p
-                let numerator = FiniteField::subtract(y2, y1, &self.p);
-                let denominator = FiniteField::subtract(x2, x1, &self.p);
+                let numerator = FiniteField::subtract(y2, y1, &self.p).unwrap();
+                let denominator = FiniteField::subtract(x2, x1, &self.p).unwrap();
 
-                let s = FiniteField::divide(&numerator, &denominator, &self.p);
+                let s = FiniteField::divide(&numerator, &denominator, &self.p).unwrap();
 
                 let (x3, y3) = self.compute_x3_y3(&x1, &y1, &x2, &s);
                 Point::Coor(x3, y3)
@@ -185,11 +185,12 @@ impl EllipticCurve {
 
                 // s = (3 * x1^2 + a) / (2 * y1) mod p
                 let numerator = x1.modpow(&BigUint::from(2u32), &self.p);
-                let numerator = FiniteField::mult(&BigUint::from(3u32), &numerator, &self.p);
-                let numerator = FiniteField::add(&self.a, &numerator, &self.p);
+                let numerator =
+                    FiniteField::mult(&BigUint::from(3u32), &numerator, &self.p).unwrap();
+                let numerator = FiniteField::add(&self.a, &numerator, &self.p).unwrap();
 
-                let denominator = FiniteField::mult(&BigUint::from(2u32), y1, &self.p);
-                let s = FiniteField::divide(&numerator, &denominator, &self.p);
+                let denominator = FiniteField::mult(&BigUint::from(2u32), y1, &self.p).unwrap();
+                let s = FiniteField::divide(&numerator, &denominator, &self.p).unwrap();
 
                 let (x3, y3) = self.compute_x3_y3(&x1, &y1, &x1, &s);
                 Point::Coor(x3, y3)
@@ -220,12 +221,12 @@ impl EllipticCurve {
         s: &BigUint,
     ) -> (BigUint, BigUint) {
         let s2 = s.modpow(&BigUint::from(2u32), &self.p);
-        let x3 = FiniteField::subtract(&s2, x1, &self.p);
-        let x3 = FiniteField::subtract(&x3, x2, &self.p);
+        let x3 = FiniteField::subtract(&s2, x1, &self.p).unwrap();
+        let x3 = FiniteField::subtract(&x3, x2, &self.p).unwrap();
 
-        let y3 = FiniteField::subtract(x1, &x3, &self.p);
-        let y3 = FiniteField::mult(&s, &y3, &self.p);
-        let y3 = FiniteField::subtract(&y3, &y1, &self.p);
+        let y3 = FiniteField::subtract(x1, &x3, &self.p).unwrap();
+        let y3 = FiniteField::mult(&s, &y3, &self.p).unwrap();
+        let y3 = FiniteField::subtract(&y3, &y1, &self.p).unwrap();
 
         assert!(x3 < self.p, "{} >= {}", x3, &self.p);
         assert!(y3 < self.p, "{} >= {}", y3, &self.p);
@@ -271,10 +272,10 @@ impl EllipticCurve {
             Point::Coor(x, y) => {
                 let y2 = y.modpow(&BigUint::from(2u32), &self.p);
                 let x3 = x.modpow(&BigUint::from(3u32), &self.p);
-                let ax = FiniteField::mult(&self.a, x, &self.p);
-                let x3plusax = FiniteField::add(&x3, &ax, &self.p);
+                let ax = FiniteField::mult(&self.a, x, &self.p).unwrap();
+                let x3plusax = FiniteField::add(&x3, &ax, &self.p).unwrap();
 
-                y2 == FiniteField::add(&x3plusax, &self.b, &self.p)
+                y2 == FiniteField::add(&x3plusax, &self.b, &self.p).unwrap()
             }
             Point::Identity => true,
         }
