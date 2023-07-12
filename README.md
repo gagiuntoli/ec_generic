@@ -27,7 +27,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-ec_generic = "0.1.13"
+ec_generic = "0.1.14"
 ```
 
 ## Example: `y^2 = x^3 + 2x + 2 mod 17`
@@ -49,6 +49,10 @@ let pr = Ok(Point::Coor(BigUint::from(10u32), BigUint::from(6u32)));
 
 let res = ec.add(&p1, &p2);
 assert_eq!(res, pr);
+
+let res = ec.add(&p2, &p1);
+assert_eq!(res, pr);
+```
 
 ## Example: `secp256k1`: `y^2 = x^3 + 7 mod p (large)`
 
@@ -93,3 +97,4 @@ let res = ec.scalar_mul(&g, &n);
 
 assert_eq!(res, Ok(Point::Identity));
 ```
+
