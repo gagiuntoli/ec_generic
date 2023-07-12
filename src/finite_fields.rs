@@ -84,7 +84,7 @@ impl FiniteField {
     ///
     /// Divides two elements in the set:
     ///
-    /// `a / b = a * b^(-1) = c mod p`
+    /// `a / b = a * b^(-1) = a mod p`
     ///
     pub fn divide(a: &BigUint, b: &BigUint, p: &BigUint) -> Result<BigUint, FiniteFieldError> {
         FiniteField::check_less_than(a, p)?;
@@ -108,137 +108,114 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_add_1() {
-        let c = BigUint::from(4u32);
-        let d = BigUint::from(10u32);
+    fn test_add() {
+        let a = BigUint::from(4u32);
+        let b = BigUint::from(10u32);
         let p = BigUint::from(11u32);
 
-        let r = FiniteField::add(&c, &d, &p).unwrap();
+        let res = FiniteField::add(&a, &b, &p).unwrap();
+        assert_eq!(res, BigUint::from(3u32));
 
-        assert_eq!(r, BigUint::from(3u32));
-    }
-
-    #[test]
-    fn test_add_result_0() {
-        let c = BigUint::from(10u32);
-        let d = BigUint::from(1u32);
+        let a = BigUint::from(10u32);
+        let b = BigUint::from(1u32);
         let p = BigUint::from(11u32);
 
-        let r = FiniteField::add(&c, &d, &p).unwrap();
+        let res = FiniteField::add(&a, &b, &p).unwrap();
+        assert_eq!(res, BigUint::from(0u32));
 
-        assert_eq!(r, BigUint::from(0u32));
-    }
-
-    #[test]
-    fn test_add_2() {
-        let c = BigUint::from(4u32);
-        let d = BigUint::from(10u32);
+        let a = BigUint::from(4u32);
+        let b = BigUint::from(10u32);
         let p = BigUint::from(31u32);
 
-        let r = FiniteField::add(&c, &d, &p).unwrap();
-
-        assert_eq!(r, BigUint::from(14u32));
+        let res = FiniteField::add(&a, &b, &p).unwrap();
+        assert_eq!(res, BigUint::from(14u32));
     }
 
     #[test]
     fn test_mul_1() {
-        let c = BigUint::from(4u32);
-        let d = BigUint::from(10u32);
+        let a = BigUint::from(4u32);
+        let b = BigUint::from(10u32);
         let p = BigUint::from(11u32);
 
-        let r = FiniteField::mult(&c, &d, &p).unwrap();
+        let res = FiniteField::mult(&a, &b, &p).unwrap();
 
-        assert_eq!(r, BigUint::from(7u32));
+        assert_eq!(res, BigUint::from(7u32));
     }
 
     #[test]
-    fn test_mul_2() {
-        let c = BigUint::from(4u32);
-        let d = BigUint::from(10u32);
+    fn test_multiply() {
+        let a = BigUint::from(4u32);
+        let b = BigUint::from(10u32);
         let p = BigUint::from(51u32);
 
-        let r = FiniteField::mult(&c, &d, &p).unwrap();
-
-        assert_eq!(r, BigUint::from(40u32));
+        let res = FiniteField::mult(&a, &b, &p).unwrap();
+        assert_eq!(res, BigUint::from(40u32));
     }
 
     #[test]
-    fn test_inv_add_1() {
-        let c = BigUint::from(4u32);
+    fn test_inv_add() {
+        let a = BigUint::from(4u32);
         let p = BigUint::from(51u32);
 
-        let r = FiniteField::inv_add(&c, &p).unwrap();
+        let res = FiniteField::inv_add(&a, &p).unwrap();
+        assert_eq!(res, BigUint::from(47u32));
 
-        assert_eq!(r, BigUint::from(47u32));
-    }
-
-    #[test]
-    fn test_inv_add_zero() {
-        let c = BigUint::from(0u32);
+        let a = BigUint::from(0u32);
         let p = BigUint::from(51u32);
 
-        let r = FiniteField::inv_add(&c, &p).unwrap();
+        let res = FiniteField::inv_add(&a, &p).unwrap();
+        assert_eq!(res, BigUint::from(0u32));
 
-        assert_eq!(r, BigUint::from(0u32));
-    }
-
-    #[test]
-    fn test_inv_add_2() {
-        let c = BigUint::from(52u32);
+        let a = BigUint::from(52u32);
         let p = BigUint::from(51u32);
 
         assert_eq!(
-            FiniteField::inv_add(&c, &p),
-            Err(FiniteFieldError::InvalidArgument(format!("{} >= {}", c, p)))
+            FiniteField::inv_add(&a, &p),
+            Err(FiniteFieldError::InvalidArgument(format!("{} >= {}", a, p)))
         );
-    }
 
-    #[test]
-    fn test_inv_add_identity() {
-        let c = BigUint::from(4u32);
+        let a = BigUint::from(4u32);
         let p = BigUint::from(51u32);
 
-        let c_inv = FiniteField::inv_add(&c, &p).unwrap();
+        let c_inv = FiniteField::inv_add(&a, &p);
 
-        assert_eq!(c_inv, BigUint::from(47u32));
-
-        assert_eq!(FiniteField::add(&c, &c_inv, &p), Ok(BigUint::from(0u32)));
+        assert_eq!(c_inv, Ok(BigUint::from(47u32)));
+        assert_eq!(
+            FiniteField::add(&a, &c_inv.unwrap(), &p),
+            Ok(BigUint::from(0u32))
+        );
     }
 
     #[test]
     fn test_subtract() {
-        let c = BigUint::from(4u32);
+        // a - a = 0 mod p
+        let a = BigUint::from(4u32);
         let p = BigUint::from(51u32);
 
-        assert_eq!(
-            FiniteField::subtract(&c, &c, &p).unwrap(),
-            BigUint::from(0u32)
-        );
+        assert_eq!(FiniteField::subtract(&a, &a, &p), Ok(BigUint::from(0u32)));
     }
 
     #[test]
-    fn test_inv_mult_prime_identity() {
-        let c = BigUint::from(4u32);
+    fn test_inv_mult() {
+        // 4 * 3 mod 11 = 12 mod 11 = 1
+        let a = BigUint::from(4u32);
         let p = BigUint::from(11u32);
 
-        let c_inv = FiniteField::inv_mult_prime(&c, &p).unwrap();
+        let c_inv = FiniteField::inv_mult_prime(&a, &p);
 
-        // 4 * 3 mod 11 = 12 mod 11 = 1
-        assert_eq!(c_inv, BigUint::from(3u32));
+        assert_eq!(c_inv, Ok(BigUint::from(3u32)));
         assert_eq!(
-            FiniteField::mult(&c, &c_inv, &p).unwrap(),
-            BigUint::from(1u32)
+            FiniteField::mult(&a, &c_inv.unwrap(), &p),
+            Ok(BigUint::from(1u32))
         );
     }
 
     #[test]
     fn test_divide() {
-        let c = BigUint::from(4u32);
+        // a / a = 1 mod p
+        let a = BigUint::from(4u32);
         let p = BigUint::from(11u32);
 
-        assert_eq!(
-            FiniteField::divide(&c, &c, &p).unwrap(),
-            BigUint::from(1u32)
-        );
+        assert_eq!(FiniteField::divide(&a, &a, &p), Ok(BigUint::from(1u32)));
     }
 }
