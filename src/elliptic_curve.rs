@@ -144,22 +144,22 @@ impl EllipticCurve {
     /// x-reflection of the intersection of the lines that passes through `A`
     /// and `B` and intersects the curve.
     ///
-    pub fn add(&self, c: &Point, d: &Point) -> Result<Point, EllipticCurveError> {
-        if !self.is_on_curve(c) {
-            return Err(EllipticCurveError::InvalidPoint(c.clone()));
+    pub fn add(&self, a: &Point, b: &Point) -> Result<Point, EllipticCurveError> {
+        if !self.is_on_curve(a) {
+            return Err(EllipticCurveError::InvalidPoint(a.clone()));
         }
 
-        if !self.is_on_curve(d) {
-            return Err(EllipticCurveError::InvalidPoint(d.clone()));
+        if !self.is_on_curve(b) {
+            return Err(EllipticCurveError::InvalidPoint(b.clone()));
         }
 
-        if *c == *d {
-            return self.double(c);
+        if *a == *b {
+            return self.double(a);
         }
 
-        match (c, d) {
-            (Point::Identity, _) => Ok(d.clone()),
-            (_, Point::Identity) => Ok(c.clone()),
+        match (a, b) {
+            (Point::Identity, _) => Ok(b.clone()),
+            (_, Point::Identity) => Ok(a.clone()),
             (Point::Coor(x1, y1), Point::Coor(x2, y2)) => {
                 // Check that they are not additive inverses
                 let y1plusy2 = FiniteField::add(&y1, &y2, &self.p).unwrap();
@@ -185,12 +185,12 @@ impl EllipticCurve {
     /// the curve. Geometrically speaking, the point `B` is the intersection of
     /// the tangent line over A that intersects the curve.
     ///
-    pub fn double(&self, c: &Point) -> Result<Point, EllipticCurveError> {
-        if !self.is_on_curve(c) {
-            return Err(EllipticCurveError::InvalidPoint(c.clone()));
+    pub fn double(&self, a: &Point) -> Result<Point, EllipticCurveError> {
+        if !self.is_on_curve(a) {
+            return Err(EllipticCurveError::InvalidPoint(a.clone()));
         }
 
-        match c {
+        match a {
             Point::Identity => Ok(Point::Identity),
             Point::Coor(x1, y1) => {
                 if *y1 == BigUint::from(0u32) {
@@ -260,16 +260,16 @@ impl EllipticCurve {
     ///           T = T + A
     /// ```
     ///
-    pub fn scalar_mul(&self, c: &Point, d: &BigUint) -> Result<Point, EllipticCurveError> {
+    pub fn scalar_mul(&self, a: &Point, d: &BigUint) -> Result<Point, EllipticCurveError> {
         if *d == BigUint::from(0u32) {
             return Err(EllipticCurveError::InvalidScalar(d.clone()));
         }
 
-        let mut t = c.clone();
+        let mut t = a.clone();
         for i in (0..(d.bits() - 1)).rev() {
             t = self.double(&t)?;
             if d.bit(i) {
-                t = self.add(&t, c)?;
+                t = self.add(&t, a)?;
             }
         }
         Ok(t)
@@ -281,8 +281,8 @@ impl EllipticCurve {
     /// if `y^2 = x^3 + a * x + b mod p` then returns `true`, if not, returns
     /// `false`.
     ///
-    pub fn is_on_curve(&self, c: &Point) -> bool {
-        match c {
+    pub fn is_on_curve(&self, a: &Point) -> bool {
+        match a {
             Point::Coor(x, y) => {
                 let y2 = y.modpow(&BigUint::from(2u32), &self.p);
                 let x3 = x.modpow(&BigUint::from(3u32), &self.p);
@@ -426,41 +426,41 @@ mod test {
             p: BigUint::from(17u32),
         };
 
-        let c = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
+        let a = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
 
         // 2 * (5, 1) = (6,3)
         let pr = Ok(Point::Coor(BigUint::from(6u32), BigUint::from(3u32)));
-        let res = ec.scalar_mul(&c, &BigUint::from(2u32));
+        let res = ec.scalar_mul(&a, &BigUint::from(2u32));
         assert_eq!(res, pr);
 
         // 10 * (5, 1) = (7,11)
         let pr = Ok(Point::Coor(BigUint::from(7u32), BigUint::from(11u32)));
-        let res = ec.scalar_mul(&c, &BigUint::from(10u32));
+        let res = ec.scalar_mul(&a, &BigUint::from(10u32));
         assert_eq!(res, pr);
 
         // 15 * (5, 1) = (3,16)
         let pr = Ok(Point::Coor(BigUint::from(3u32), BigUint::from(16u32)));
-        let res = ec.scalar_mul(&c, &BigUint::from(15u32));
+        let res = ec.scalar_mul(&a, &BigUint::from(15u32));
         assert_eq!(res, pr);
 
         // 16 * (5, 1) = (10,11)
         let pr = Ok(Point::Coor(BigUint::from(10u32), BigUint::from(11u32)));
-        let res = ec.scalar_mul(&c, &BigUint::from(16u32));
+        let res = ec.scalar_mul(&a, &BigUint::from(16u32));
         assert_eq!(res, pr);
 
         // 17 * (5, 1) = (6,14)
         let pr = Ok(Point::Coor(BigUint::from(6u32), BigUint::from(14u32)));
-        let res = ec.scalar_mul(&c, &BigUint::from(17u32));
+        let res = ec.scalar_mul(&a, &BigUint::from(17u32));
         assert_eq!(res, pr);
 
         // 18 * (5, 1) = (5,16)
         let pr = Ok(Point::Coor(BigUint::from(5u32), BigUint::from(16u32)));
-        let res = ec.scalar_mul(&c, &BigUint::from(18u32));
+        let res = ec.scalar_mul(&a, &BigUint::from(18u32));
         assert_eq!(res, pr);
 
         // 19 * (5, 1) = I
         let pr = Ok(Point::Identity);
-        let res = ec.scalar_mul(&c, &BigUint::from(19u32));
+        let res = ec.scalar_mul(&a, &BigUint::from(19u32));
         assert_eq!(res, pr);
 
         // 2 * (10, 6) = (16,13)
