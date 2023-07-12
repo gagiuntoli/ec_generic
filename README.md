@@ -27,7 +27,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-ec_generic = "0.1.11"
+ec_generic = "0.1.12"
 ```
 
 ## Example: `y^2 = x^3 + 2x + 2 mod 17`
@@ -36,68 +36,17 @@ ec_generic = "0.1.11"
 use ec_generic::{EllipticCurve, Point};
 use num_bigint::BigUint;
 
-fn main() {
-    let ec = EllipticCurve {
-        a: BigUint::from(2u32),
-        b: BigUint::from(2u32),
-        p: BigUint::from(17u32),
-    };
+let ec = EllipticCurve {
+    a: BigUint::from(2u32),
+    b: BigUint::from(2u32),
+    p: BigUint::from(17u32),
+};
 
-    // (6,3) + (5,1) = (10,6)
-    let p1 = Point::Coor(BigUint::from(6u32), BigUint::from(3u32));
-    let p2 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
-    let pr = Point::Coor(BigUint::from(10u32), BigUint::from(6u32));
+// (6,3) + (5,1) = (10,6)
+let p1 = Point::Coor(BigUint::from(6u32), BigUint::from(3u32));
+let p2 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
+let pr = Ok(Point::Coor(BigUint::from(10u32), BigUint::from(6u32)));
 
-    let res = ec.add(&p1, &p2);
-    assert_eq!(res, pr);
+let res = ec.add(&p1, &p2);
+assert_eq!(res, pr);
 
-    let res = ec.add(&p2, &p1);
-    assert_eq!(res, pr);
-}
-```
-
-## Example: `secp256k1`: `y^2 = x^3 + 7 mod p (large)`
-
-```rust
-use ec_generic::{EllipticCurve, Point};
-use num_bigint::BigUint;
-
-fn main() {
-    let p = BigUint::parse_bytes(
-        b"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F",
-        16,
-    )
-    .expect("could not convert p");
-
-    let n = BigUint::parse_bytes(
-        b"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
-        16,
-    )
-    .expect("could not convert n");
-
-    let gx = BigUint::parse_bytes(
-        b"79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
-        16,
-    )
-    .expect("could not convert gx");
-
-    let gy = BigUint::parse_bytes(
-        b"483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8",
-        16,
-    )
-    .expect("could not convert gy");
-
-    let ec = EllipticCurve {
-        a: BigUint::from(0u32),
-        b: BigUint::from(7u32),
-        p,
-    };
-
-    let g = Point::Coor(gx, gy);
-
-    // n * G = I (Identity)
-    let res = ec.scalar_mul(&g, &n);
-
-    assert_eq!(res, Point::Identity);
-}
-```

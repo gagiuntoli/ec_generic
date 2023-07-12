@@ -26,7 +26,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-ec_generic = "0.1.11"
+ec_generic = "0.1.12"
 ```
 
 ## Example: `y^2 = x^3 + 2x + 2 mod 17`
@@ -44,13 +44,13 @@ let ec = EllipticCurve {
 // (6,3) + (5,1) = (10,6)
 let p1 = Point::Coor(BigUint::from(6u32), BigUint::from(3u32));
 let p2 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
-let pr = Point::Coor(BigUint::from(10u32), BigUint::from(6u32));
+let pr = Ok(Point::Coor(BigUint::from(10u32), BigUint::from(6u32)));
 
 let res = ec.add(&p1, &p2);
-assert_eq!(res, Ok(pr.clone()));
+assert_eq!(res, pr);
 
 let res = ec.add(&p2, &p1);
-assert_eq!(res, Ok(pr));
+assert_eq!(res, pr);
 ```
 
 ## Example: `secp256k1`: `y^2 = x^3 + 7 mod p (large)`
