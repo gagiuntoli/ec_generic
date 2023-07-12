@@ -132,20 +132,14 @@ mod test {
     }
 
     #[test]
-    fn test_mul_1() {
+    fn test_multiply() {
         let a = BigUint::from(4u32);
         let b = BigUint::from(10u32);
         let p = BigUint::from(11u32);
 
         let res = FiniteField::mult(&a, &b, &p).unwrap();
-
         assert_eq!(res, BigUint::from(7u32));
-    }
 
-    #[test]
-    fn test_multiply() {
-        let a = BigUint::from(4u32);
-        let b = BigUint::from(10u32);
         let p = BigUint::from(51u32);
 
         let res = FiniteField::mult(&a, &b, &p).unwrap();

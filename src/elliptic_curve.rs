@@ -35,24 +35,22 @@ ec_generic = "0.1.10"
 use ec_generic::{EllipticCurve, Point};
 use num_bigint::BigUint;
 
-fn main() {
-    let ec = EllipticCurve {
-        a: BigUint::from(2u32),
-        b: BigUint::from(2u32),
-        p: BigUint::from(17u32),
-    };
+let ec = EllipticCurve {
+    a: BigUint::from(2u32),
+    b: BigUint::from(2u32),
+    p: BigUint::from(17u32),
+};
 
-    // (6,3) + (5,1) = (10,6)
-    let p1 = Point::Coor(BigUint::from(6u32), BigUint::from(3u32));
-    let p2 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
-    let pr = Point::Coor(BigUint::from(10u32), BigUint::from(6u32));
+// (6,3) + (5,1) = (10,6)
+let p1 = Point::Coor(BigUint::from(6u32), BigUint::from(3u32));
+let p2 = Point::Coor(BigUint::from(5u32), BigUint::from(1u32));
+let pr = Point::Coor(BigUint::from(10u32), BigUint::from(6u32));
 
-    let res = ec.add(&p1, &p2);
-    assert_eq!(res, Ok(pr.clone()));
+let res = ec.add(&p1, &p2);
+assert_eq!(res, Ok(pr.clone()));
 
-    let res = ec.add(&p2, &p1);
-    assert_eq!(res, Ok(pr));
-}
+let res = ec.add(&p2, &p1);
+assert_eq!(res, Ok(pr));
 ```
 
 ## Example: `secp256k1`: `y^2 = x^3 + 7 mod p (large)`
@@ -61,44 +59,42 @@ fn main() {
 use ec_generic::{EllipticCurve, Point};
 use num_bigint::BigUint;
 
-fn main() {
-    let p = BigUint::parse_bytes(
-        b"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F",
-        16,
-    )
-    .expect("could not convert p");
+let p = BigUint::parse_bytes(
+    b"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F",
+    16,
+)
+.expect("could not convert p");
 
-    let n = BigUint::parse_bytes(
-        b"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
-        16,
-    )
-    .expect("could not convert n");
+let n = BigUint::parse_bytes(
+    b"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
+    16,
+)
+.expect("could not convert n");
 
-    let gx = BigUint::parse_bytes(
-        b"79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
-        16,
-    )
-    .expect("could not convert gx");
+let gx = BigUint::parse_bytes(
+    b"79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
+    16,
+)
+.expect("could not convert gx");
 
-    let gy = BigUint::parse_bytes(
-        b"483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8",
-        16,
-    )
-    .expect("could not convert gy");
+let gy = BigUint::parse_bytes(
+    b"483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8",
+    16,
+)
+.expect("could not convert gy");
 
-    let ec = EllipticCurve {
-        a: BigUint::from(0u32),
-        b: BigUint::from(7u32),
-        p,
-    };
+let ec = EllipticCurve {
+    a: BigUint::from(0u32),
+    b: BigUint::from(7u32),
+    p,
+};
 
-    let g = Point::Coor(gx, gy);
+let g = Point::Coor(gx, gy);
 
-    // n * G = I (Identity)
-    let res = ec.scalar_mul(&g, &n);
+// n * G = I (Identity)
+let res = ec.scalar_mul(&g, &n);
 
-    assert_eq!(res, Ok(Point::Identity));
-}
+assert_eq!(res, Ok(Point::Identity));
 ```
 
 */
@@ -162,7 +158,8 @@ impl EllipticCurve {
             (_, Point::Identity) => Ok(a.clone()),
             (Point::Coor(x1, y1), Point::Coor(x2, y2)) => {
                 // Check that they are not additive inverses
-                let y1plusy2 = FiniteField::add(&y1, &y2, &self.p).unwrap();
+                let y1plusy2 = FiniteField::add(y1, y2, &self.p).unwrap();
+
                 if x1 == x2 && y1plusy2 == BigUint::from(0u32) {
                     return Ok(Point::Identity);
                 }
@@ -173,7 +170,7 @@ impl EllipticCurve {
 
                 let s = FiniteField::divide(&numerator, &denominator, &self.p).unwrap();
 
-                let (x3, y3) = self.compute_x3_y3(&x1, &y1, &x2, &s);
+                let (x3, y3) = self.compute_x3_y3(x1, y1, x2, &s);
 
                 Ok(Point::Coor(x3, y3))
             }
@@ -206,7 +203,7 @@ impl EllipticCurve {
                 let denominator = FiniteField::mult(&BigUint::from(2u32), y1, &self.p).unwrap();
                 let s = FiniteField::divide(&numerator, &denominator, &self.p).unwrap();
 
-                let (x3, y3) = self.compute_x3_y3(&x1, &y1, &x1, &s);
+                let (x3, y3) = self.compute_x3_y3(x1, y1, x1, &s);
 
                 Ok(Point::Coor(x3, y3))
             }
@@ -240,8 +237,8 @@ impl EllipticCurve {
         let x3 = FiniteField::subtract(&x3, x2, &self.p).unwrap();
 
         let y3 = FiniteField::subtract(x1, &x3, &self.p).unwrap();
-        let y3 = FiniteField::mult(&s, &y3, &self.p).unwrap();
-        let y3 = FiniteField::subtract(&y3, &y1, &self.p).unwrap();
+        let y3 = FiniteField::mult(s, &y3, &self.p).unwrap();
+        let y3 = FiniteField::subtract(&y3, y1, &self.p).unwrap();
 
         (x3, y3)
     }
