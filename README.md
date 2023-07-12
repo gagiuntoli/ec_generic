@@ -27,7 +27,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-ec_generic = "0.1.10"
+ec_generic = "0.1.11"
 ```
 
 ## Example: `y^2 = x^3 + 2x + 2 mod 17`
