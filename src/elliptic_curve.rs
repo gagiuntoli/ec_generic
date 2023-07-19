@@ -21,8 +21,7 @@ curve groups, for example:
 
 # Usage
 
-This crate is [on crates.io](https://crates.io/crates/regex) and can be
-used by adding `regex` to your dependencies in your project's `Cargo.toml`.
+Add `ec_generic` to your dependencies in your project's `Cargo.toml`:
 
 ```toml
 [dependencies]
